@@ -1,20 +1,40 @@
+using System;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    private CharacterController _controller;
-    private Vector3 _dir;
-    private Animator _animator;
-    [SerializeField] private int speed;
+    #region CONSTANTS
+
+    private const float MaxSpeed = 110f;
+
+    #endregion
+
+    [SerializeField] private float speed;
     [SerializeField] private float jumpForce;
     [SerializeField] private float gravity;
+    [SerializeField] private float lineDistance;
+    [SerializeField] private GameObject losePanel;
+
+    private Vector3 _dir;
+    private Animator _animator;
+    private CharacterController _controller;
 
     private bool _isSliding;
-    private int _lineToMove = 1;
-    public float _lineDistance = 4;
+    private bool IsGrounded => _controller.isGrounded;
+    private LineToMove _lineToMove = LineToMove.Middle;
+
+    private enum LineToMove
+    {
+        Left,
+        Middle,
+        Right
+    }
+
     private static readonly int IsRunning = Animator.StringToHash("isRunning");
     private static readonly int Jump1 = Animator.StringToHash("jump");
 
+
+    #region MONO
 
     private void Start()
     {
@@ -24,55 +44,67 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (SwipeController.swipeRight)
+        HandleSwipeInput();
+
+        UpdateAnimatorState();
+
+        MovePlayer();
+    }
+
+    private void FixedUpdate()
+    {
+        _dir.z = speed;
+        _dir.y += gravity * Time.fixedDeltaTime;
+        _controller.Move(_dir * Time.fixedDeltaTime);
+    }
+
+    #endregion
+
+    private void HandleSwipeInput()
+    {
+        if (SwipeController.swipeRight && _lineToMove != LineToMove.Right)
         {
-            if (_lineToMove < 2)
-            {
-                _lineToMove++;
-            }
+            _lineToMove++;
         }
 
-        if (SwipeController.swipeLeft)
+        if (SwipeController.swipeLeft && _lineToMove != LineToMove.Left)
         {
-            if (_lineToMove > 0)
-            {
-                _lineToMove--;
-            }
+            _lineToMove--;
         }
 
-        if (SwipeController.swipeUp)
+        if (SwipeController.swipeUp && IsGrounded)
         {
-            if (_controller.isGrounded)
-            {
-                Jump();
-            }
+            Jump();
         }
+    }
 
+    private void UpdateAnimatorState()
+    {
+        _animator.SetBool(IsRunning, _controller.isGrounded && !_isSliding);
+    }
 
-        if (_controller.isGrounded && !_isSliding)
-        {
-            _animator.SetBool(IsRunning, true);
-        }
-        else
-        {
-            _animator.SetBool(IsRunning, false);
-        }
-
+    private void MovePlayer()
+    {
         var targetPosition = transform.position.z * transform.forward + transform.position.y * transform.up;
+
         switch (_lineToMove)
         {
-            case 0:
-                targetPosition += Vector3.left * _lineDistance;
+            case LineToMove.Left:
+                targetPosition += Vector3.left * lineDistance;
                 break;
-            case 2:
-                targetPosition += Vector3.right * _lineDistance;
+            case LineToMove.Right:
+                targetPosition += Vector3.right * lineDistance;
                 break;
+            case LineToMove.Middle:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
-        if (transform.position == targetPosition)
-            return;
+        if (transform.position == targetPosition) return;
+
         var diff = targetPosition - transform.position;
-        var moveDir = diff.normalized * (25 * Time.deltaTime);
+        var moveDir = diff.normalized * (speed * Time.deltaTime);
         _controller.Move(moveDir.sqrMagnitude < diff.sqrMagnitude ? moveDir : diff);
 
         transform.position = targetPosition;
@@ -84,10 +116,11 @@ public class PlayerController : MonoBehaviour
         _animator.SetTrigger(Jump1);
     }
 
-    private void FixedUpdate()
+
+    private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        _dir.z = speed;
-        _dir.y += gravity * Time.fixedDeltaTime;
-        _controller.Move(_dir * Time.fixedDeltaTime);
+        if (!hit.gameObject.CompareTag("obstacle")) return;
+        losePanel.SetActive(true);
+        Time.timeScale = 0;
     }
 }

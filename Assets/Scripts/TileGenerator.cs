@@ -16,6 +16,10 @@ public class Tile : MonoBehaviour
     {
         for (int i = 0; i < startTiles; i++)
         {
+            if (i == 0)
+            {
+                SpawnTile(0);
+            }
             SpawnTile(Random.Range(0, tilePrefabs.Length));
         }
     }
