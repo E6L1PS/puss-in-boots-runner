@@ -6,13 +6,13 @@ public class Tile : MonoBehaviour
     public GameObject[] tilePrefabs;
     private List<GameObject> activeTiles = new List<GameObject>();
 
-    private float spawnPos = 0;
+    private float _spawnPos = 0;
     private float tileLength = 200;
 
     [SerializeField] private Transform player;
     private int startTiles = 5;
 
-    void Start()
+    private void Start()
     {
         for (int i = 0; i < startTiles; i++)
         {
@@ -25,20 +25,18 @@ public class Tile : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        if (player.position.z - 120 > spawnPos - (startTiles * tileLength))
-        {
-            SpawnTile(Random.Range(0, tilePrefabs.Length));
-            DeleteTile();
-        }
+        if (!(player.position.z - 120 > _spawnPos - (startTiles * tileLength))) return;
+        SpawnTile(Random.Range(0, tilePrefabs.Length));
+        DeleteTile();
     }
 
     private void SpawnTile(int tileIndex)
     {
-        GameObject nextTile = Instantiate(tilePrefabs[tileIndex], transform.forward * spawnPos, transform.rotation);
+        var nextTile = Instantiate(tilePrefabs[tileIndex], transform.forward * _spawnPos, transform.rotation);
         activeTiles.Add(nextTile);
-        spawnPos += tileLength;
+        _spawnPos += tileLength;
     }
 
     private void DeleteTile()

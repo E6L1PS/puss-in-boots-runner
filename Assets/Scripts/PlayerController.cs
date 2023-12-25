@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using TMPro;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -13,6 +15,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float jumpForce;
     [SerializeField] private float gravity;
     [SerializeField] private float lineDistance;
+    [SerializeField] private int countMilk;
+    [SerializeField] private TextMeshProUGUI countMilkText;
     [SerializeField] private GameObject losePanel;
 
     private Vector3 _dir;
@@ -32,14 +36,17 @@ public class PlayerController : MonoBehaviour
 
     private static readonly int IsRunning = Animator.StringToHash("isRunning");
     private static readonly int Jump1 = Animator.StringToHash("jump");
+    private static readonly int Slide1 = Animator.StringToHash("slide");
 
 
     #region MONO
 
     private void Start()
     {
+        Time.timeScale = 1;
         _animator = GetComponentInChildren<Animator>();
         _controller = GetComponent<CharacterController>();
+        StartCoroutine(SpeedIncrease());
     }
 
     private void Update()
@@ -116,11 +123,30 @@ public class PlayerController : MonoBehaviour
         _animator.SetTrigger(Jump1);
     }
 
+    private void Slide()
+    {
+        _animator.SetTrigger(Slide1);
+    }
 
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
         if (!hit.gameObject.CompareTag("obstacle")) return;
         losePanel.SetActive(true);
         Time.timeScale = 0;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (!other.gameObject.CompareTag("milk")) return;
+        countMilkText.text = (++countMilk).ToString();
+        Destroy(other.gameObject);
+    }
+
+    private IEnumerator SpeedIncrease()
+    {
+        yield return new WaitForSeconds(4);
+        if (!(speed < MaxSpeed)) yield break;
+        speed += 3;
+        StartCoroutine(SpeedIncrease());
     }
 }
