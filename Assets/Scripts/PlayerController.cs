@@ -38,7 +38,9 @@ public class PlayerController : Sounds
     private static readonly int IsRunning = Animator.StringToHash("isRunning");
     private static readonly int Jump1 = Animator.StringToHash("jump");
     private static readonly int Slide1 = Animator.StringToHash("slide");
-    private static readonly int Fall1 = Animator.StringToHash("fall");
+    private static readonly int IsFall = Animator.StringToHash("isFall");
+    private static readonly int Right = Animator.StringToHash("right");
+    private static readonly int Left = Animator.StringToHash("left");
 
 
     #region MONO
@@ -70,10 +72,16 @@ public class PlayerController : Sounds
     private void HandleSwipeInput()
     {
         if (SwipeController.swipeRight && _lineToMove != LineToMove.Right)
+        {
+            _animator.SetTrigger(Right);
             _lineToMove++;
+        }
 
         if (SwipeController.swipeLeft && _lineToMove != LineToMove.Left)
+        {
+            _animator.SetTrigger(Left);
             _lineToMove--;
+        }
 
         if (SwipeController.swipeUp && IsGrounded)
             Jump();
@@ -94,11 +102,9 @@ public class PlayerController : Sounds
         switch (_lineToMove)
         {
             case LineToMove.Left:
-                _animator.SetTrigger("left");
                 targetPosition += Vector3.left * lineDistance;
                 break;
             case LineToMove.Right:
-                _animator.SetTrigger("right");
                 targetPosition += Vector3.right * lineDistance;
                 break;
             case LineToMove.Middle:
@@ -111,9 +117,8 @@ public class PlayerController : Sounds
 
         var diff = targetPosition - transform.position;
         var moveDir = diff.normalized * (speed * Time.deltaTime);
-        _controller.Move(moveDir.sqrMagnitude < diff.sqrMagnitude ? moveDir : diff);
 
-        transform.position = targetPosition;
+        _controller.Move(moveDir.sqrMagnitude < diff.sqrMagnitude ? moveDir : diff);
     }
 
     private void Jump()
@@ -132,9 +137,15 @@ public class PlayerController : Sounds
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
         if (!hit.gameObject.CompareTag("obstacle")) return;
+        speed = 0;
+        _animator.SetBool(IsFall, true);
         PlaySound(sounds[2]);
-        Time.timeScale = 0;
+    }
+
+    public void AnimationCompleteEvent()
+    {
         losePanel.SetActive(true);
+        Time.timeScale = 0;
     }
 
     private void OnTriggerEnter(Collider other)
