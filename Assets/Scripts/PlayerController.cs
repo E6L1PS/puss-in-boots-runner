@@ -3,7 +3,7 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : Sounds
 {
     #region CONSTANTS
 
@@ -18,14 +18,15 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private int countMilk;
     [SerializeField] private TextMeshProUGUI countMilkText;
     [SerializeField] private GameObject losePanel;
+    [SerializeField] private Score scoreScript;
 
+    private bool _isSliding;
     private Vector3 _dir;
     private Animator _animator;
     private CharacterController _controller;
-
-    private bool _isSliding;
-    private bool IsGrounded => _controller.isGrounded;
     private LineToMove _lineToMove = LineToMove.Middle;
+
+    private bool IsGrounded => _controller.isGrounded;
 
     private enum LineToMove
     {
@@ -37,6 +38,7 @@ public class PlayerController : MonoBehaviour
     private static readonly int IsRunning = Animator.StringToHash("isRunning");
     private static readonly int Jump1 = Animator.StringToHash("jump");
     private static readonly int Slide1 = Animator.StringToHash("slide");
+    private static readonly int Fall1 = Animator.StringToHash("fall");
 
 
     #region MONO
@@ -52,9 +54,7 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         HandleSwipeInput();
-
         UpdateAnimatorState();
-
         MovePlayer();
     }
 
@@ -70,19 +70,16 @@ public class PlayerController : MonoBehaviour
     private void HandleSwipeInput()
     {
         if (SwipeController.swipeRight && _lineToMove != LineToMove.Right)
-        {
             _lineToMove++;
-        }
 
         if (SwipeController.swipeLeft && _lineToMove != LineToMove.Left)
-        {
             _lineToMove--;
-        }
 
         if (SwipeController.swipeUp && IsGrounded)
-        {
             Jump();
-        }
+
+        if (SwipeController.swipeDown)
+            Slide();
     }
 
     private void UpdateAnimatorState()
@@ -97,9 +94,11 @@ public class PlayerController : MonoBehaviour
         switch (_lineToMove)
         {
             case LineToMove.Left:
+                _animator.SetTrigger("left");
                 targetPosition += Vector3.left * lineDistance;
                 break;
             case LineToMove.Right:
+                _animator.SetTrigger("right");
                 targetPosition += Vector3.right * lineDistance;
                 break;
             case LineToMove.Middle:
@@ -119,26 +118,30 @@ public class PlayerController : MonoBehaviour
 
     private void Jump()
     {
+        PlaySound(sounds[0]);
         _dir.y = jumpForce;
         _animator.SetTrigger(Jump1);
     }
 
     private void Slide()
     {
+        _dir.y = 0;
         _animator.SetTrigger(Slide1);
     }
 
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
         if (!hit.gameObject.CompareTag("obstacle")) return;
-        losePanel.SetActive(true);
+        PlaySound(sounds[2]);
         Time.timeScale = 0;
+        losePanel.SetActive(true);
     }
 
     private void OnTriggerEnter(Collider other)
     {
         if (!other.gameObject.CompareTag("milk")) return;
         countMilkText.text = (++countMilk).ToString();
+        PlaySound(sounds[1]);
         Destroy(other.gameObject);
     }
 

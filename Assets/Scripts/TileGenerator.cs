@@ -24,7 +24,6 @@ public class Tile : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
     private void Update()
     {
         if (!(player.position.z - 120 > _spawnPos - (startTiles * tileLength))) return;
