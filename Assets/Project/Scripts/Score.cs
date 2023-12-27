@@ -1,16 +1,26 @@
 using TMPro;
 using UnityEngine;
 
-public class Score : MonoBehaviour
+namespace Project.Scripts
 {
-    [SerializeField] public int score;
-    [SerializeField] private Transform player;
-    [SerializeField] private TextMeshProUGUI textScore;
-
-    private void Update()
+    public class Score : MonoBehaviour
     {
-        score = (int)(player.position.z / 2);
-        textScore.text = score.ToString();
+        [SerializeField] public int score;
+        [SerializeField] public int milkBottles;
+        [SerializeField] private TextMeshProUGUI scoreCountText;
+        [SerializeField] private TextMeshProUGUI milkBottlesCountText;
+        [SerializeField] private Transform player;
+
+        private void Update()
+        {
+            score = (int)(player.position.z / 2);
+            scoreCountText.text = score.ToString();
+        }
+
+        public void AddMilkBottle()
+        {
+            milkBottles++;
+            milkBottlesCountText.text = milkBottles.ToString();
+        }
     }
-    
 }

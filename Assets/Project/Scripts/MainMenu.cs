@@ -1,13 +1,23 @@
-using System.Collections;
-using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class MainMenu : MonoBehaviour
+namespace Project.Scripts
 {
-    public void PlayGame()
-    {	
-        SceneManager.LoadScene(1);
-    }
+    public class MainMenu : MonoBehaviour
+    {
+        [SerializeField] private TextMeshProUGUI maxScoreCountText;
+        [SerializeField] private TextMeshProUGUI milkBottlesCountText;
 
+        private void Start()
+        {
+            maxScoreCountText.text = PlayerPrefs.GetInt("score", 0).ToString();
+            milkBottlesCountText.text = PlayerPrefs.GetInt("milk", 0).ToString();
+        }
+
+        public void PlayGame()
+        {
+            SceneManager.LoadScene(1);
+        }
+    }
 }
