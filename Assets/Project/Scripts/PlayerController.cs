@@ -86,7 +86,7 @@ namespace Project.Scripts
                 Jump();
 
             if (SwipeController.swipeDown)
-                Slide();
+                StartCoroutine(Slide());
         }
 
         private void UpdateAnimatorState()
@@ -127,11 +127,6 @@ namespace Project.Scripts
             _animator.SetTrigger(Jump1);
         }
 
-        private void Slide()
-        {
-            _dir.y = 0;
-            _animator.SetTrigger(Slide1);
-        }
 
         private void OnControllerColliderHit(ControllerColliderHit hit)
         {
@@ -167,6 +162,17 @@ namespace Project.Scripts
             if (!(speed < MaxSpeed)) yield break;
             speed += 3;
             StartCoroutine(SpeedIncrease());
+        }
+
+        private IEnumerator Slide()
+        {
+            _dir.y = 0;
+            _animator.SetTrigger(Slide1);
+            _controller.height = 4;
+            _controller.center = new Vector3(0, 1, 0);
+            yield return new WaitForSeconds(1);
+            _controller.height = 7;
+            _controller.center = new Vector3(0, 2.5f, 0);
         }
     }
 }
